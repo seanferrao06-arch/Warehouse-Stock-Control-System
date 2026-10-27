@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Edit User')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('users')}"></nav>
+
+<main class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-top border-4 border-primary">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-gear text-primary fs-5"></i>
+                        <span class="fw-bold">Edit User Account: <span th:text="${account.username}" class="text-primary">Username</span></span>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/users}">
+                        <i class="bi bi-arrow-left"></i> Back to Users
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div th:replace="~{fragments/common :: flash}"></div>
+
+                    <form th:action="@{/users/{id}(id=${account.userId})}" th:object="${userForm}" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="editUsername">Username <span class="text-danger">*</span></label>
+                            <input class="form-control" id="editUsername" th:field="*{username}" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                            <div class="invalid-feedback">Username is required.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="editPassword">Reset Password (Optional)</label>
+                            <input type="password" class="form-control" id="editPassword" th:field="*{password}" placeholder="Leave blank to keep existing password">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                            <div class="form-text text-muted small">Only enter a password if you wish to change the existing one.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="editRole">Assigned Role <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editRole" th:field="*{role}" required>
+                                <option th:each="role : ${roles}" th:value="${role}" th:text="${role.name()}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <a class="btn btn-outline-secondary" th:href="@{/users}">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+</body>
+</html>
+

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Edit Supplier')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('suppliers')}"></nav>
+
+<main class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-top border-4 border-primary">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square text-primary fs-5"></i>
+                        <span class="fw-bold">Edit Supplier: <span th:text="${supplier.name}" class="text-primary">Supplier</span></span>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/suppliers}">
+                        <i class="bi bi-arrow-left"></i> Back to Suppliers
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div th:replace="~{fragments/common :: flash}"></div>
+
+                    <form th:action="@{/suppliers/{id}(id=${supplier.supplierId})}" th:object="${supplierForm}" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="editSupplierName">Supplier Name <span class="text-danger">*</span></label>
+                            <input class="form-control" id="editSupplierName" th:field="*{name}" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            <div class="invalid-feedback">Supplier name is required.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="editContactInfo">Contact Information <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="editContactInfo" rows="3" th:field="*{contactInfo}" required></textarea>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('contactInfo')}" th:errors="*{contactInfo}"></div>
+                            <div class="invalid-feedback">Contact details are required.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <a class="btn btn-outline-secondary" th:href="@{/suppliers}">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+</body>
+</html>
+

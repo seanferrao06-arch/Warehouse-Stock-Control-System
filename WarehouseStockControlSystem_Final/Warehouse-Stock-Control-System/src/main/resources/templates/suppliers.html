@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Suppliers')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('suppliers')}"></nav>
+
+<main class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h1 class="page-heading h2 mb-1">
+                <i class="bi bi-truck text-primary me-2"></i>Supplier Directory
+            </h1>
+            <p class="text-muted mb-0">Manage registered warehouse vendors and vendor contact information.</p>
+        </div>
+        <div>
+            <a class="btn btn-outline-secondary" th:href="@{/stock}">
+                <i class="bi bi-arrow-left-right"></i> Go to Stock Operations
+            </a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: flash}"></div>
+
+    <div class="row g-4">
+        <!-- Supplier List -->
+        <div class="col-lg-8">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-building text-primary fs-5"></i>
+                        <span class="fw-bold">Active Suppliers</span>
+                        <span class="badge bg-secondary ms-1" th:text="${#lists.size(suppliers)} + ' Registered'"></span>
+                    </div>
+                    <div class="search-box-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="supplierSearch" class="form-control form-control-sm table-search-input" placeholder="Search supplier or contact...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="supplierTable">
+                        <thead>
+                            <tr>
+                                <th>Supplier Name</th>
+                                <th>Contact Information</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="supplier : ${suppliers}">
+                                <td>
+                                    <strong class="text-dark">
+                                        <i class="bi bi-truck text-muted me-1"></i>
+                                        <span th:text="${supplier.name}">Supplier Name</span>
+                                    </strong>
+                                </td>
+                                <td>
+                                    <span class="text-muted" th:text="${supplier.contactInfo}">Contact Details</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a class="btn btn-outline-primary" th:href="@{/suppliers/{id}/edit(id=${supplier.supplierId})}" title="Edit supplier">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <form class="d-inline" th:action="@{/suppliers/{id}/delete(id=${supplier.supplierId})}" method="post">
+                                            <button class="btn btn-outline-danger" onclick="return confirm('Delete this supplier? (Cannot be deleted if referenced in stock movements)')" title="Delete supplier">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(suppliers)}" class="no-filter">
+                                <td colspan="3" class="empty-state">
+                                    <i class="bi bi-truck-flatbed"></i>
+                                    <strong>No suppliers registered yet.</strong>
+                                    <p class="text-muted mb-0">Use the form on the right to add your primary vendors.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Add Supplier Form -->
+        <div class="col-lg-4">
+            <section class="card shadow-sm border-top border-4 border-primary">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center gap-2 text-primary fw-bold">
+                        <i class="bi bi-plus-circle fs-5"></i>
+                        <span>Register Supplier</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/suppliers}" th:object="${supplierForm}" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="supplierName">Supplier Name <span class="text-danger">*</span></label>
+                            <input class="form-control" id="supplierName" th:field="*{name}" placeholder="e.g. Apex Industrial Supplies" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            <div class="invalid-feedback">Supplier name is required.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="contactInfo">Contact Information <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="contactInfo" rows="3" th:field="*{contactInfo}" placeholder="orders@supplier.example | +91 98000 00000" required></textarea>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('contactInfo')}" th:errors="*{contactInfo}"></div>
+                            <div class="invalid-feedback">Contact details are required.</div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-2" type="submit">
+                            <i class="bi bi-plus-lg"></i> Add Supplier
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupTableSearch('supplierSearch', 'supplierTable');
+    });
+</script>
+</body>
+</html>
+

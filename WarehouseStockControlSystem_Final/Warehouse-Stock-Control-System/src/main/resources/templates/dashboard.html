@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('dashboard')}"></nav>
+
+<main class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h1 class="page-heading h2 mb-1">
+                Welcome, <span th:text="${username}">User</span>
+            </h1>
+            <p class="text-muted mb-0">Live overview of inventory levels and warehouse activities.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" th:href="@{/stock}">
+                <i class="bi bi-arrow-left-right"></i> Stock Operations
+            </a>
+            <a class="btn btn-outline-secondary" sec:authorize="hasRole('ADMIN')" th:href="@{/reports}">
+                <i class="bi bi-bar-chart"></i> View Reports
+            </a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: flash}"></div>
+
+    <!-- Stat Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card primary">
+                <div class="stat-label">Catalog Products</div>
+                <div class="stat-number" th:text="${stats.totalProducts}">0</div>
+                <i class="bi bi-box-seam stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card danger" th:classappend="${stats.lowStockItems > 0} ? 'border-danger' : ''">
+                <div class="stat-label">Low-Stock Alerts</div>
+                <div class="stat-number" th:classappend="${stats.lowStockItems > 0} ? 'text-danger' : 'text-success'" th:text="${stats.lowStockItems}">0</div>
+                <i class="bi bi-exclamation-triangle stat-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card warning">
+                <div class="stat-label">Today's Movements</div>
+                <div class="stat-number text-primary" th:text="${stats.todayMovements}">0</div>
+                <i class="bi bi-clock-history stat-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert Panel -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-shield-exclamation text-danger fs-5"></i>
+                <span class="fw-bold">Active Low-Stock Alerts</span>
+                <span class="badge bg-danger ms-1" th:if="${not #lists.isEmpty(alerts)}" th:text="${#lists.size(alerts)} + ' Critical'"></span>
+            </div>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/reports}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-file-earmark-text"></i> Full Report
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Warehouse Location</th>
+                        <th>Current Quantity</th>
+                        <th>Reorder Level</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="alert : ${alerts}" class="low-stock-alert">
+                        <td>
+                            <strong class="text-dark" th:text="${alert.productName}">Product</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${alert.locationName}">Location</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-danger fs-6" th:text="${alert.quantity}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="text-muted" th:text="${alert.reorderLevel}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="badge-low-stock">
+                                <i class="bi bi-exclamation-circle-fill"></i> REORDER NEEDED
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-success" th:href="@{/stock}">
+                                <i class="bi bi-box-arrow-in-down"></i> Restock
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(alerts)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-check2-circle text-success"></i>
+                            <strong>All stock levels are healthy!</strong>
+                            <p class="text-muted mb-0">No warehouse items are currently below their reorder thresholds.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Operations Guide -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3 bg-success-subtle text-success">
+                        <i class="bi bi-box-arrow-in-down fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Receive Stock (Stock IN)</h5>
+                        <p class="text-muted small mb-2">Record incoming goods from registered suppliers with automated audit tracking.</p>
+                        <a class="btn btn-sm btn-outline-success" th:href="@{/stock}">Perform Stock IN</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-3 bg-danger-subtle text-danger">
+                        <i class="bi bi-box-arrow-up fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Issue Stock (Stock OUT)</h5>
+                        <p class="text-muted small mb-2">Dispatch inventory from warehouse locations with real-time balance checks.</p>
+                        <a class="btn btn-sm btn-outline-danger" th:href="@{/stock}">Perform Stock OUT</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+</body>
+</html>
+

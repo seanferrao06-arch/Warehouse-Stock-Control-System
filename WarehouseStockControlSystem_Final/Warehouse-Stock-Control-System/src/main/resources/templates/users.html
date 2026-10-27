@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('User Management')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('users')}"></nav>
+
+<main class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h1 class="page-heading h2 mb-1">
+                <i class="bi bi-people text-primary me-2"></i>User Accounts &amp; Access Control
+            </h1>
+            <p class="text-muted mb-0">Manage system operator accounts and role permissions (ADMIN / STAFF).</p>
+        </div>
+        <div>
+            <a class="btn btn-outline-secondary" th:href="@{/}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: flash}"></div>
+
+    <div class="row g-4">
+        <!-- Accounts Table -->
+        <div class="col-lg-8">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-primary fs-5"></i>
+                        <span class="fw-bold">Registered Users</span>
+                        <span class="badge bg-secondary ms-1" th:text="${#lists.size(users)} + ' Users'"></span>
+                    </div>
+                    <div class="search-box-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="userSearch" class="form-control form-control-sm table-search-input" placeholder="Search username or role...">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="userTable">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Access Role</th>
+                                <th>Permissions</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="account : ${users}">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-sm rounded-circle bg-light border p-2 text-center" style="width:36px;height:36px;display:inline-grid;place-items:center;">
+                                            <i class="bi bi-person text-secondary"></i>
+                                        </div>
+                                        <strong class="text-dark" th:text="${account.username}">Username</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${account.role.name() == 'ADMIN'}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-shield-lock-fill me-1"></i> ADMIN
+                                    </span>
+                                    <span th:if="${account.role.name() == 'STAFF'}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                        <i class="bi bi-person-check-fill me-1"></i> STAFF
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-muted small" th:if="${account.role.name() == 'ADMIN'}">Full access (Catalog, Suppliers, Reports, Users)</span>
+                                    <span class="text-muted small" th:if="${account.role.name() == 'STAFF'}">Stock operations only (Stock IN &amp; OUT)</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a class="btn btn-outline-primary" th:href="@{/users/{id}/edit(id=${account.userId})}" title="Edit user">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        <form class="d-inline" th:action="@{/users/{id}/delete(id=${account.userId})}" method="post">
+                                            <button class="btn btn-outline-danger" onclick="return confirm('Delete this user account? (Cannot be deleted if referenced in audit movements)')" title="Delete account">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Add User Form -->
+        <div class="col-lg-4">
+            <section class="card shadow-sm border-top border-4 border-primary">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center gap-2 text-primary fw-bold">
+                        <i class="bi bi-person-plus fs-5"></i>
+                        <span>Create New User</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/users}" th:object="${userForm}" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="username">Username <span class="text-danger">*</span></label>
+                            <input class="form-control" id="username" th:field="*{username}" placeholder="e.g. jdoe" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                            <div class="invalid-feedback">Username is required.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="Enter password" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                            <div class="invalid-feedback">Password is required.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="userRole">Assigned Role <span class="text-danger">*</span></label>
+                            <select class="form-select" id="userRole" th:field="*{role}" required>
+                                <option value="">-- Select Role --</option>
+                                <option th:each="role : ${roles}" th:value="${role}" th:text="${role.name()}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+                            <div class="invalid-feedback">Please select a role.</div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-2" type="submit">
+                            <i class="bi bi-person-check"></i> Create Account
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupTableSearch('userSearch', 'userTable');
+    });
+</script>
+</body>
+</html>
+

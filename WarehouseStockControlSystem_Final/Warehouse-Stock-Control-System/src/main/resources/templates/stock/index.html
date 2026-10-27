@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Stock Operations')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('stock')}"></nav>
+
+<main class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h1 class="page-heading h2 mb-1">
+                <i class="bi bi-arrow-left-right text-primary me-2"></i>Warehouse &amp; Stock Operations
+            </h1>
+            <p class="text-muted mb-0">Every stock movement is recorded in the permanent, append-only audit trail.</p>
+        </div>
+        <div>
+            <a class="btn btn-outline-secondary" th:href="@{/}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: flash}"></div>
+
+    <!-- Movement Forms: IN and OUT -->
+    <div class="row g-4 mb-4">
+        <!-- Stock IN Form -->
+        <div class="col-lg-6">
+            <section class="card h-100 border-top border-4 border-success shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center gap-2 text-success fw-bold">
+                        <i class="bi bi-box-arrow-in-down fs-5"></i>
+                        <span>Record Stock IN (Receive Inventory)</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/stock/in}" th:object="${stockInForm}" method="post" class="needs-validation" novalidate id="formStockIn">
+                        <div class="mb-3">
+                            <label class="form-label" for="stockInProduct">
+                                <i class="bi bi-box-seam me-1 text-muted"></i>Product <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="stockInProduct" th:field="*{productId}" required>
+                                <option value="0">-- Select Product --</option>
+                                <option th:each="p : ${products}" th:value="${p.productId}" th:text="${p.name + ' (Reorder: ' + p.reorderLevel + ')'}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('productId')}" th:errors="*{productId}"></div>
+                            <div class="invalid-feedback">Please choose a product to receive.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="stockInLocation">
+                                <i class="bi bi-geo-alt me-1 text-muted"></i>Warehouse Location <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="stockInLocation" th:field="*{locationId}" required>
+                                <option value="0">-- Select Location --</option>
+                                <option th:each="l : ${locations}" th:value="${l.locationId}" th:text="${l.name}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('locationId')}" th:errors="*{locationId}"></div>
+                            <div class="invalid-feedback">Please choose the destination warehouse location.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="stockInSupplier">
+                                <i class="bi bi-truck me-1 text-muted"></i>Supplier <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="stockInSupplier" th:field="*{supplierId}" required>
+                                <option value="0">-- Select Supplier --</option>
+                                <option th:each="s : ${suppliers}" th:value="${s.supplierId}" th:text="${s.name}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('supplierId')}" th:errors="*{supplierId}"></div>
+                            <div class="invalid-feedback">Please choose the supplier providing these goods.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="stockInQty">
+                                <i class="bi bi-123 me-1 text-muted"></i>Quantity Received <span class="text-danger">*</span>
+                            </label>
+                            <input class="form-control" id="stockInQty" min="1" step="1" th:field="*{quantity}" type="number" placeholder="Enter units (e.g. 50)" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+                            <div class="invalid-feedback">Quantity must be a positive number of at least 1.</div>
+                        </div>
+
+                        <button class="btn btn-success w-100 py-2" type="submit">
+                            <i class="bi bi-check-lg"></i> Confirm Stock IN
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <!-- Stock OUT Form -->
+        <div class="col-lg-6">
+            <section class="card h-100 border-top border-4 border-danger shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex align-items-center gap-2 text-danger fw-bold">
+                        <i class="bi bi-box-arrow-up fs-5"></i>
+                        <span>Record Stock OUT (Issue Inventory)</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="@{/stock/out}" th:object="${stockOutForm}" method="post" class="needs-validation" novalidate id="formStockOut">
+                        <div class="mb-3">
+                            <label class="form-label" for="stockOutProduct">
+                                <i class="bi bi-box-seam me-1 text-muted"></i>Product <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="stockOutProduct" th:field="*{productId}" required>
+                                <option value="0">-- Select Product --</option>
+                                <option th:each="p : ${products}" th:value="${p.productId}" th:text="${p.name + ' (Reorder: ' + p.reorderLevel + ')'}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('productId')}" th:errors="*{productId}"></div>
+                            <div class="invalid-feedback">Please choose a product to issue.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="stockOutLocation">
+                                <i class="bi bi-geo-alt me-1 text-muted"></i>Warehouse Location <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="stockOutLocation" th:field="*{locationId}" required>
+                                <option value="0">-- Select Location --</option>
+                                <option th:each="l : ${locations}" th:value="${l.locationId}" th:text="${l.name}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('locationId')}" th:errors="*{locationId}"></div>
+                            <div class="invalid-feedback">Please choose the source warehouse location.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="stockOutQty">
+                                <i class="bi bi-123 me-1 text-muted"></i>Quantity Issued <span class="text-danger">*</span>
+                            </label>
+                            <input class="form-control" id="stockOutQty" min="1" step="1" th:field="*{quantity}" type="number" placeholder="Enter units (e.g. 10)" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+                            <div class="invalid-feedback">Quantity must be a positive number of at least 1.</div>
+                            <div class="form-text text-muted small">
+                                <i class="bi bi-info-circle"></i> System will verify available balance before completing dispatch.
+                            </div>
+                        </div>
+
+                        <button class="btn btn-danger w-100 py-2" type="submit">
+                            <i class="bi bi-check-lg"></i> Confirm Stock OUT
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Current Stock Levels Table -->
+    <section class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-layers text-primary fs-5"></i>
+                <span class="fw-bold">Current Stock by Location</span>
+                <span class="badge bg-secondary ms-1" th:text="${#lists.size(stockLevels)} + ' Records'"></span>
+            </div>
+            <div class="search-box-wrapper">
+                <i class="bi bi-search"></i>
+                <input type="text" id="stockSearch" oninput="filterTable('stockSearch', 'stockTable')" onkeyup="filterTable('stockSearch', 'stockTable')" class="form-control form-control-sm table-search-input" placeholder="Search product or location...">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="stockTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Location</th>
+                        <th>On Hand Quantity</th>
+                        <th>Reorder Level</th>
+                        <th>Status</th>
+                        <th class="text-end">Quick Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="stock : ${stockLevels}" th:classappend="${stock.quantity &lt; stock.reorderLevel} ? 'low-stock-alert' : ''">
+                        <td>
+                            <strong class="text-dark" th:text="${stock.productName}">Product</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${stock.locationName}">Location</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold fs-6" th:classappend="${stock.quantity &lt; stock.reorderLevel} ? 'text-danger' : 'text-dark'" th:text="${stock.quantity}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="text-muted" th:text="${stock.reorderLevel}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span th:if="${stock.quantity &lt; stock.reorderLevel}" class="badge-low-stock">
+                                <i class="bi bi-exclamation-triangle-fill"></i> LOW STOCK
+                            </span>
+                            <span th:unless="${stock.quantity &lt; stock.reorderLevel}" class="badge-stock-ok">
+                                <i class="bi bi-check-circle-fill"></i> HEALTHY
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-success me-1"
+                                    th:onclick="'prefillStock(' + ${stock.productId} + ', ' + ${stock.locationId} + ', \'in\')'"
+                                    title="Pre-fill Stock IN form">
+                                <i class="bi bi-plus-circle"></i> In
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    th:onclick="'prefillStock(' + ${stock.productId} + ', ' + ${stock.locationId} + ', \'out\')'"
+                                    title="Pre-fill Stock OUT form">
+                                <i class="bi bi-dash-circle"></i> Out
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(stockLevels)}" class="no-filter">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <strong>No stock balances recorded yet.</strong>
+                            <p class="text-muted mb-0">Use the Stock IN form above to log the first batch of inventory.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupTableSearch('stockSearch', 'stockTable');
+    });
+
+    function prefillStock(productId, locationId, direction) {
+        if (direction === 'in') {
+            document.getElementById('stockInProduct').value = productId;
+            document.getElementById('stockInLocation').value = locationId;
+            document.getElementById('formStockIn').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('stockInQty').focus();
+        } else {
+            document.getElementById('stockOutProduct').value = productId;
+            document.getElementById('stockOutLocation').value = locationId;
+            document.getElementById('formStockOut').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('stockOutQty').focus();
+        }
+    }
+</script>
+</body>
+</html>
+

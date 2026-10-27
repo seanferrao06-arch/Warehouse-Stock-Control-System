@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Edit Product')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('products')}"></nav>
+
+<main class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-top border-4 border-primary">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square text-primary fs-5"></i>
+                        <span class="fw-bold">Edit Product: <span th:text="${product.name}" class="text-primary">Product</span></span>
+                    </div>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/products}">
+                        <i class="bi bi-arrow-left"></i> Back to Catalog
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div th:replace="~{fragments/common :: flash}"></div>
+
+                    <form th:action="@{/products/{id}(id=${product.productId})}" th:object="${productForm}" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="editName">Product Name <span class="text-danger">*</span></label>
+                            <input class="form-control" id="editName" th:field="*{name}" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            <div class="invalid-feedback">Product name is required.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="editCategory">Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editCategory" th:field="*{categoryId}" required>
+                                <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.name}"></option>
+                            </select>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="editReorder">Reorder Threshold Level <span class="text-danger">*</span></label>
+                            <input class="form-control" id="editReorder" min="0" step="1" type="number" th:field="*{reorderLevel}" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('reorderLevel')}" th:errors="*{reorderLevel}"></div>
+                            <div class="form-text text-muted small">Low-stock warning will trigger if quantity at any location drops below this.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="editPrice">Unit Price (₹) <span class="text-danger">*</span></label>
+                            <input class="form-control" id="editPrice" min="0" step="0.01" type="number" th:field="*{unitPrice}" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('unitPrice')}" th:errors="*{unitPrice}"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <a class="btn btn-outline-secondary" th:href="@{/products}">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+</body>
+</html>
+

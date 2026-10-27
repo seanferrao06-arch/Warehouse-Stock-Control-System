@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Reports & Analytics')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('reports')}"></nav>
+
+<main class="container pb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h1 class="page-heading h2 mb-1">
+                <i class="bi bi-file-earmark-bar-graph text-primary me-2"></i>Reporting &amp; Analytics
+            </h1>
+            <p class="text-muted mb-0">Audited inventory valuations, movement history, and stock thresholds.</p>
+        </div>
+        <div>
+            <a class="btn btn-outline-secondary" th:href="@{/stock}">
+                <i class="bi bi-arrow-left-right"></i> Stock Operations
+            </a>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/common :: flash}"></div>
+
+    <!-- Active Low-Stock Alerts -->
+    <section class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                <span class="fw-bold">Active Low-Stock Threshold Alerts</span>
+                <span class="badge bg-danger ms-1" th:if="${not #lists.isEmpty(alerts)}" th:text="${#lists.size(alerts)} + ' Critical'"></span>
+            </div>
+            <span class="text-muted small" th:if="${#lists.isEmpty(alerts)}">All inventory within safe operational limits</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Location</th>
+                        <th>On Hand Quantity</th>
+                        <th>Reorder Level</th>
+                        <th>Shortfall</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="alert : ${alerts}" class="low-stock-alert">
+                        <td>
+                            <strong class="text-dark" th:text="${alert.productName}">Product</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${alert.locationName}">Location</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-danger fs-6" th:text="${alert.quantity}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="text-muted" th:text="${alert.reorderLevel}">0</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger text-white" th:text="${(alert.reorderLevel - alert.quantity) + ' units needed'}">5 units needed</span>
+                        </td>
+                        <td>
+                            <span class="badge-low-stock">
+                                <i class="bi bi-bell-fill"></i> REORDER NOW
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(alerts)}">
+                        <td colspan="6" class="empty-state py-4">
+                            <i class="bi bi-shield-check text-success fs-3"></i>
+                            <strong>No low-stock alerts.</strong>
+                            <p class="text-muted mb-0">All warehouse balances are above configured reorder levels.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Mid Section: Inventory Summary & Movement Totals -->
+    <div class="row g-4 mb-4">
+        <!-- Current Inventory Valuation Summary -->
+        <div class="col-lg-7">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-wallet2 text-primary fs-5"></i>
+                        <span class="fw-bold">Inventory Valuation Summary</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Total Units</th>
+                                <th>Locations</th>
+                                <th class="text-end">Estimated Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="summary : ${stockSummary}">
+                                <td>
+                                    <strong class="text-dark" th:text="${summary.productName}">Product</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" th:text="${summary.categoryName}">Category</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold" th:text="${summary.totalQuantity}">0</span>
+                                    <span class="text-muted small">units</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis" th:text="${summary.locations + ' loc'}">1 loc</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success" th:text="${'₹' + #numbers.formatDecimal(summary.inventoryValue, 1, 'COMMA', 2, 'POINT')}">₹0.00</strong>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(stockSummary)}">
+                                <td colspan="5" class="empty-state">No inventory summary data available.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Audited Movements by Product -->
+        <div class="col-lg-5">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-steps text-primary fs-5"></i>
+                        <span class="fw-bold">All-Time IN vs OUT</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Total IN</th>
+                                <th class="text-center">Total OUT</th>
+                                <th class="text-end">Net Flow</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="total : ${movementTotals}">
+                                <td>
+                                    <strong class="text-dark" th:text="${total.productName}">Product</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" th:text="'+' + ${total.unitsIn}">+60</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" th:text="'-' + ${total.unitsOut}">-35</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong th:classappend="${(total.unitsIn - total.unitsOut) >= 0} ? 'text-success' : 'text-danger'"
+                                            th:text="${(total.unitsIn - total.unitsOut) >= 0 ? '+' + (total.unitsIn - total.unitsOut) : (total.unitsIn - total.unitsOut)}">
+                                        +25
+                                    </strong>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(movementTotals)}">
+                                <td colspan="4" class="empty-state">No movement data recorded.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Stock Movement Audit Trail Report -->
+    <section class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text text-primary fs-5"></i>
+                <span class="fw-bold">Stock Movement Audit Log</span>
+                <span class="badge bg-secondary ms-1" th:text="${#lists.size(movements)} + ' Logged'"></span>
+            </div>
+            <div class="search-box-wrapper">
+                <i class="bi bi-search"></i>
+                <input type="text" id="movementSearch" class="form-control form-control-sm table-search-input" placeholder="Search movement log...">
+            </div>
+        </div>
+        <div class="card-body bg-light border-bottom p-3">
+            <form class="row g-2 align-items-end" method="get" th:action="@{/reports}">
+                <div class="col-md-4 col-sm-6">
+                    <label class="form-label small mb-1" for="start">Start Date</label>
+                    <input class="form-control form-control-sm" id="start" name="start" type="date" th:value="${start}">
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <label class="form-label small mb-1" for="end">End Date</label>
+                    <input class="form-control form-control-sm" id="end" name="end" type="date" th:value="${end}">
+                </div>
+                <div class="col-md-4 col-sm-12 d-flex gap-2">
+                    <button class="btn btn-sm btn-primary flex-grow-1" type="submit">
+                        <i class="bi bi-funnel"></i> Filter Range
+                    </button>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/reports}">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="movementTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Product</th>
+                        <th>Warehouse Location</th>
+                        <th>Supplier</th>
+                        <th>Quantity</th>
+                        <th>Handled By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${movements}">
+                        <td class="text-muted small">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            <span th:text="${#temporals.format(m.timestamp, 'dd MMM yyyy, HH:mm')}">25 Aug 2026, 09:30</span>
+                        </td>
+                        <td>
+                            <span th:if="${m.type.name() == 'IN'}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                <i class="bi bi-arrow-down-left"></i> IN (Receipt)
+                            </span>
+                            <span th:if="${m.type.name() == 'OUT'}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                <i class="bi bi-arrow-up-right"></i> OUT (Issue)
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="text-dark" th:text="${m.productName}">Product</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${m.locationName}">Location</span>
+                        </td>
+                        <td>
+                            <span th:text="${m.supplierName ?: '-'}" th:classappend="${m.supplierName == null} ? 'text-muted' : 'text-dark'">-</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold" th:classappend="${m.type.name() == 'IN'} ? 'text-success' : 'text-danger'"
+                                  th:text="${(m.type.name() == 'IN' ? '+' : '-') + m.quantity}">+60</span>
+                            <span class="text-muted small">units</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                                <i class="bi bi-person me-1"></i><span th:text="${m.username}">admin</span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(movements)}" class="no-filter">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-clock-history"></i>
+                            <strong>No movements found in the selected date range.</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setupTableSearch('movementSearch', 'movementTable');
+    });
+</script>
+</body>
+</html>
+

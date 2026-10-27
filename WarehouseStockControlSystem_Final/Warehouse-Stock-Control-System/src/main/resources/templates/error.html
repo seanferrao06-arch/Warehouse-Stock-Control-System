@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/common :: head('Action Could Not Be Completed')}"></head>
+<body>
+<nav th:replace="~{fragments/common :: navbar('error')}"></nav>
+
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-top border-4 border-warning text-center p-4 p-md-5">
+                <div class="mb-3">
+                    <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center" style="width:70px;height:70px;">
+                        <i class="bi bi-exclamation-octagon fs-1"></i>
+                    </div>
+                </div>
+                <h1 class="h3 page-heading mb-2">Notice</h1>
+                <p class="text-danger fw-semibold fs-5 mb-3" th:text="${errorMessage}">Unable to complete action.</p>
+                <p class="text-muted mb-4">
+                    Please verify the submitted details or return to your dashboard to proceed.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a class="btn btn-primary" th:href="@{/}">
+                        <i class="bi bi-house"></i> Return to Dashboard
+                    </a>
+                    <a class="btn btn-outline-secondary" th:href="@{/stock}">
+                        <i class="bi bi-arrow-left-right"></i> Stock Operations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/common :: footer}"></footer>
+<div th:replace="~{fragments/common :: scripts}"></div>
+</body>
+</html>
+
